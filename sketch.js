@@ -131,7 +131,7 @@ function connectBtnClick() {
 
 // Fetch data from the Node.js server
 function fetchData() {
-  fetch("http://192.168.1.100:8000/data") // Replace with your laptop's IP
+  fetch("http://192.168.1.191:8000/data") // Replace with your laptop's IP
     .then((response) => response.json())
     .then((data) => {
       console.log("Data from Flask server:", data.value);
