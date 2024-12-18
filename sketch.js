@@ -26,13 +26,18 @@ function setup() {
   // in setup, we can open ports we have used previously
   // without user interaction
 
-if (usedPorts.length > 0) {
-  try {
-    port.open(usedPorts[0], 9600);
-  } catch (error) {
-    console.error("Error opening port:", error);
+let usedPorts = usedSerialPorts();
+  console.log("Available Serial Ports:", usedPorts);
+
+  if (usedPorts.length > 0) {
+    try {
+      port.open(usedPorts[0], 9600);
+    } catch (error) {
+      console.error("Error opening port:", error);
+    }
+  } else {
+    console.warn("No used ports available.");
   }
-}
   
   connectBtn = createButton('Connect to Arduino');
   connectBtn.position(width/2, height/2);
