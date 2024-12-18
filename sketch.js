@@ -26,11 +26,13 @@ function setup() {
   // in setup, we can open ports we have used previously
   // without user interaction
 
-  let usedPorts = usedSerialPorts();
-  print(usedPorts); //prints our available ports
-  if (usedPorts.length > 0) {
+if (usedPorts.length > 0) {
+  try {
     port.open(usedPorts[0], 9600);
+  } catch (error) {
+    console.error("Error opening port:", error);
   }
+}
   
   connectBtn = createButton('Connect to Arduino');
   connectBtn.position(width/2, height/2);
@@ -50,12 +52,11 @@ function draw() {
   let spinAngle = map(lightValue, 440, 615, 0.5, 1.5);
   let randomNUmber = map(lightValue, 440, 615, 4.5, 8);
 
-  let str = port.readUntil("\n");
-  if (str.length > 0) {
-    //if our string has characters
-    potValue = str;
-    print(str);
-  }
+let str = port.readUntil("\n");
+if (str.length > 0) {
+  potValue = parseFloat(str); // Convert string to a number
+  print("Potentiometer Value:", potValue);
+}
 
   if (potValue > 0.5) {
     fill(0);
@@ -115,20 +116,24 @@ function cloudBg() {
 function connectBtnClick() {
   if (!port.opened()) {
     port.open("Arduino", 9600);
+    connectBtn.html('Disconnect from Arduino');
   } else {
     port.close();
+    connectBtn.html('Connect to Arduino');
   }
 }
 
+
 // Fetch data from the Node.js server
 function fetchData() {
-  fetch("http://<192.168.1.191>:8000/data") // Replace <laptop-ip> with your laptop’s local IP
+  fetch("http://192.168.1.100:8000/data") // Replace with your laptop's IP
     .then((response) => response.json())
     .then((data) => {
-      potValue = data.value; // Get potValue from server
-      console.log("Fetched potValue:", potValue);
+      console.log("Data from Flask server:", data.value);
+      potValue = data.value; // Update potValue for use in the sketch
     })
-    .catch((err) => {
-      console.error("Error fetching data:", err);
+    .catch((error) => {
+      console.error("Error fetching data:", error);
     });
+}
 }
