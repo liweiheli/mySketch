@@ -1,11 +1,19 @@
-let potValue = 0; // Value received from Node.js server
+// This example is also available online in the p5.js web editor:
+// https://editor.p5js.org/gohai/sketches/X0XD9xvIR
+
+let port;
+let connectBtn;
+let potValue = 0;
+
+//
 let lightData;
 let index = 0;
 let angle = 0;
 
 function preload() {
-  lightData = loadJSON("data.json"); // Load static data
+  lightData = loadJSON("data.json");
 }
+//
 
 function setup() {
   createCanvas(400, 400);
@@ -13,19 +21,41 @@ function setup() {
   noStroke();
   angleMode(DEGREES);
 
-  // Fetch data from the server every second
+  port = createSerial();
+
+  // in setup, we can open ports we have used previously
+  // without user interaction
+
+  let usedPorts = usedSerialPorts();
+  print(usedPorts); //prints our available ports
+  if (usedPorts.length > 0) {
+    port.open(usedPorts[0], 9600);
+  }
+  
+  connectBtn = createButton('Connect to Arduino');
+  connectBtn.position(width/2, height/2);
+  connectBtn.mousePressed(connectBtnClick);
+
   setInterval(fetchData, 1000);
 }
 
 function draw() {
   background(255);
-
-  // Access light data value
+  //data value
   let lightValue = lightData.lightData[index];
+
   let circleSize = map(lightValue, 440, 615, 500, 600);
   let circleColor = map(lightValue, 440, 615, 50, 0);
   let STROKEweight = map(lightValue, 440, 615, 0.1, 1);
   let spinAngle = map(lightValue, 440, 615, 0.5, 1.5);
+  let randomNUmber = map(lightValue, 440, 615, 4.5, 8);
+
+  let str = port.readUntil("\n");
+  if (str.length > 0) {
+    //if our string has characters
+    potValue = str;
+    print(str);
+  }
 
   if (potValue > 0.5) {
     fill(0);
@@ -38,6 +68,7 @@ function draw() {
       translate(200, 200);
       rotate(angle);
       noFill();
+      // stroke(circleColor);
       strokeWeight(1);
       rectMode(CENTER);
       rect(0, 0, 200 - x * 5, 200 - x * 5);
@@ -66,21 +97,32 @@ function draw() {
   }
 }
 
+//This part's sky and cloud noise effect is referencing to Perlin Noise Clouds made by runemadsen(I initially try to implement an image of cloud background, but doesn't work well)  --> https://editor.p5js.org/runemadsen/sketches/SkpOPexT7
+
+//background
 function cloudBg() {
   background(250);
   for (var x = 0; x < 100; x++) {
     for (var y = 0; y < 100; y++) {
       var r = noise(x / 50, y / 50);
       var col = map(r, 0, 1, 0, 100);
-      fill(220, col, 100, 50);
+      fill(220, col, 100, 50); // HSB fill color
       rect(x * 10, y * 10, 10, 10);
     }
   }
 }
 
+function connectBtnClick() {
+  if (!port.opened()) {
+    port.open("Arduino", 9600);
+  } else {
+    port.close();
+  }
+}
+
 // Fetch data from the Node.js server
 function fetchData() {
-  fetch("http://<laptop-ip>:8000/data") // Replace <laptop-ip> with your laptop’s local IP
+  fetch("http://<192.168.1.191>:8000/data") // Replace <laptop-ip> with your laptop’s local IP
     .then((response) => response.json())
     .then((data) => {
       potValue = data.value; // Get potValue from server
